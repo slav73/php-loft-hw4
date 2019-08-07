@@ -2,6 +2,17 @@
 
 include("interface.price.php");
 
+trait AgeValidation {
+
+    public function validAge($age)
+    {
+        if ($age < 18) {
+            throw new Exception("Мы не предоставляем авто лицам моложе 18 лет!");
+        }
+    }  
+
+}
+
 abstract class Tariffs implements Price
 {
     protected $_pricePerKm = 10;
@@ -29,17 +40,12 @@ abstract class Tariffs implements Price
 
 class BaseTariff extends Tariffs 
 {
-    public function validAge($age)
-    {
-        if ($age < 18) {
-            throw new Exception("Мы не предоставляем авто лицам моложе 18 лет!");
-        }
-    }
+    use AgeValidation;
 
     public function countPrice()
     {   
         try {
-            $this->validAge($this->_age);
+            AgeValidation::validAge($this->_age);
         } catch (Exception $e) {
             echo $e->getMessage() . PHP_EOL;
             return false;
