@@ -2,7 +2,7 @@
 
 include("class.tariffs.php");
 
-$baseTariff = new BaseTariff(5, 60, 20);
+$baseTariff = new BaseTariff(5, 60, -20);
 
 echo $baseTariff->countPrice();
 
