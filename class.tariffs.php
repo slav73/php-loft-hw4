@@ -1,17 +1,11 @@
 <?php
 
 include("interface.price.php");
-
-trait AgeValidation {
-
-    public function validAge($age)
-    {
-        if ($age < 18) {
-            throw new Exception("Мы не предоставляем авто лицам моложе 18 лет!");
-        }
-    }  
-
-}
+include("trait.ageValidation.php");
+include("trait.timeValidation.php");
+include("trait.distanceValidation.php");
+include("trait.gps.php");
+include("trait.driver.php");
 
 abstract class Tariffs implements Price
 {
@@ -22,65 +16,106 @@ abstract class Tariffs implements Price
     protected $_distance;
     protected $_time;
     protected $_risky = 1;
+    protected $_gps;
+    protected $_driver;
     
-    public function __construct($distance = 0, $time = 0, $age = 18)
+    public function __construct($distance = 0, $time = 0, $age = 18, $gps = 1, $driver = 0)
     {
         $this->_distance = $distance;
         $this->_time = $time;
         $this->_age = $age;
+        $this->_gps = $gps;
+        $this->_driver = $driver;
         
         if ($this->_age <= self::RISKY_AGE) $this->_risky = 1.1;
     }
     
-    abstract public function validAge($age);
-
-    abstract public function countPrice();
+    abstract public function orderMessage();
 
 }
 
 class BaseTariff extends Tariffs 
 {
-    use AgeValidation;
+    use AgeValidation, TimeValidation, DistanceValidation, Gps, Driver;
 
-    public function countPrice()
+    public function orderMessage()
     {   
-        try {
-            AgeValidation::validAge($this->_age);
-        } catch (Exception $e) {
-            echo $e->getMessage() . PHP_EOL;
-            return false;
+        $this->_time = TimeValidation::validTime($this->_time);
+        $this->_distance = DistanceValidation::validDistance($this->_distance);
+        
+        if (AgeValidation::ageCheck($this->_age)) {
+            $resultingPrice = self::countPrice() + Gps::calcGps($this->_time, $this->_gps);
+            return ("Базовый тариф: " . $resultingPrice . PHP_EOL);
         }
+    }
 
-        return ("Базовый тариф: " . (($this->_distance * $this->_pricePerKm + $this->_time * $this->_pricePerMinute) * $this->_risky) . PHP_EOL);
+    protected function countPrice()
+    {
+        return ($this->_distance * $this->_pricePerKm + $this->_time * $this->_pricePerMinute) * $this->_risky;
     }
 }
 
 class HourTariff extends BaseTariff 
 {
-    public function countPrice()
+    protected $_hourTime;
+
+    public function orderMessage()
     {
-        try {
-            $this->validAge($this->_age);
-        } catch (Exception $e) {
-            echo $e->getMessage() . PHP_EOL;
-            return false;
-        }
         $this->_pricePerKm = 0;
-        $this->_time = ceil($this->_time / self::HOUR);
-        return ("Тариф почасовой: " . (($this->_time * 200) * $this->_risky) . PHP_EOL);
+        $this->_pricePerHour = 200;
+        $this->_hourTime = ceil($this->_time / self::HOUR);
+        
+        if (AgeValidation::ageCheck($this->_age)) {
+            $resultingPrice = self::countPrice() + Gps::calcGps($this->_time, $this->_gps) + Driver::addDriver($this->_driver);
+            return ("Тариф почасовой: " . $resultingPrice . PHP_EOL);
+        }    
+    }
+
+    protected function countPrice()
+    {
+        return $this->_hourTime * $this->_pricePerHour * $this->_risky;
     }
 }
 
-// class DayTariff extends Tariffs 
-// {
-//     public function countPrice()
-//     {
-//         $this->_pricePerKm = 1;
+class DayTariff extends BaseTariff 
+{
+    protected $_days; 
+    
+    public function orderMessage()
+    {
+        $this->_pricePerKm = 1;
+        $this->_pricePerDay = 1000;
+        if (abs(self::DAY - ($this->_time % self::DAY)) <= 30 || $this->_time > self::DAY) {
+            $this->_days = round($this->_time / self::DAY);
+        } else {
+            $this->_days = ceil($this->_time / self::DAY);
+        }
+        $this->_pricePerKm = 1;
 
-//     }
-// }
+        if (AgeValidation::ageCheck($this->_age)) {
+            $resultingPrice = self::countPrice() + Gps::calcGps($this->_time, $this->_gps) + Driver::addDriver($this->_driver);
+            return ("Тариф посуточный: " . $resultingPrice . PHP_EOL);
+        } 
+    }
 
-// class StudentTariff extends Tariffs 
-// {
+    protected function countPrice()
+    {
+        return ($this->_distance * $this->_pricePerKm + $this->_days * $this->_pricePerDay) * $this->_risky;
+    }
+}
 
-// }
+class StudentTariff extends BaseTariff 
+{
+    public function orderMessage()
+    {
+        $this->_pricePerKm = 4;
+        $this->_pricePerMinute = 1;
+
+        if ($this->_age > 25) {
+            return ("Ваш возраст не соответствует данному тарифу. Выберите другой тариф!");
+        } else {
+            $resultingPrice = self::countPrice() + Gps::calcGps($this->_time, $this->_gps);
+            return ("Тариф студенческий: " . $resultingPrice . PHP_EOL);
+        }
+    }
+}
