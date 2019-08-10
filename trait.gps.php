@@ -1,10 +1,11 @@
 <?php
+namespace CarShare;
 
 trait Gps {
 
-    public function calcGps($time, $gps)
+    public function calcGps($hours, $gps)
     {
-        return ceil($time / 60) * 15 * $gps;
+        return ($gps > 0) ? ceil($hours * 15) : 0;
     }  
 
 }

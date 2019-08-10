@@ -1,12 +1,12 @@
 <?php
 
+namespace CarShare;
+
 trait TimeValidation {
 
     public function validTime($time)
     {
-        if ($time < 0) {
-            return 0;
-        } else return $time;
+        return ($time >= 0) ? $time : $time = 0;
     }  
 
 }

@@ -1,5 +1,7 @@
 <?php
 
+namespace CarShare;
+
 interface Price
 {
     const MIN_AGE = 18;

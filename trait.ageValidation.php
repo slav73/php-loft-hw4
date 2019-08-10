@@ -1,11 +1,13 @@
 <?php
 
+namespace CarShare;
+
 trait AgeValidation {
 
     public function validAge($age)
     {
         if ($age < 18) {
-            throw new Exception("Мы не предоставляем авто лицам моложе 18 лет!");
+            throw new \Exception("Мы не предоставляем авто лицам моложе 18 лет!");
         }
     }  
 
@@ -13,11 +15,11 @@ trait AgeValidation {
     {
         try {
             self::validAge($age);
-            return true;
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             echo $e->getMessage() . PHP_EOL;
             return false;
         }
+        return true;
     }
 
 }

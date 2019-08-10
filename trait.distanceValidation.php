@@ -1,12 +1,12 @@
 <?php
 
+namespace CarShare;
+
 trait DistanceValidation {
 
     public function validDistance($distance)
     {
-        if ($distance < 0) {
-            return 0;
-        } else return $distance;
+        return ($distance >= 0) ? $distance : $distance = 0;
     }  
 
 }
