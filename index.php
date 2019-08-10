@@ -3,11 +3,11 @@ namespace CarShare;
 
 include("init.php");
 
-$baseTariff = new BaseTariff(0, 60, 16, 7, 1);
+$baseTariff = new BaseTariff(0, 60, 27, 7, 1);
 
 echo $baseTariff->orderMessage();
 
-$hourTariff = new HourTariff(5, 60, 22, 1, 2);
+$hourTariff = new HourTariff(5, 60, 22, 1, 0);
 
 echo $hourTariff->orderMessage();
 

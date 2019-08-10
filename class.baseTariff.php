@@ -3,12 +3,14 @@ namespace CarShare;
 
 class BaseTariff extends Tariffs 
 {
+    
     public function orderMessage()
     {          
+        $this->_driver = 0;
         if (AgeValidation::ageCheck($this->_age)) {
-            $resultingPrice = self::countPrice() + $this->_gps;
-            return ("Базовый тариф: " . $resultingPrice . PHP_EOL);
+            $this->_resultingPrice = self::countPrice() + $this->_gps + $this->_driver;
         }
+        return ("Базовый тариф: " . $this->_resultingPrice . PHP_EOL);
     }
 
     protected function countPrice()
